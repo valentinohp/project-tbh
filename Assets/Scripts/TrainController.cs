@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class TrainController : MonoBehaviour
 {
-    [SerializeField] private int _maxHealth;
+    [SerializeField] private int _maxHealth = 3;
     [SerializeField] private float _moveSpeed = 2f;
     [SerializeField] private float _topBoundary;
     [SerializeField] private float _bottomBoundary;
@@ -12,7 +12,8 @@ public class TrainController : MonoBehaviour
     private int _healthLeft;
     private int _chargesLeft;
     private int _currentTrack;
-    private bool axisInUse = false;
+    private bool _axisInUse = false;
+    private bool _isAlive = true;
     [SerializeField] private Timer _chargeCooldownTimer;
     [SerializeField] private TMP_Text _chargesLeftUI;
     [SerializeField] private Slider _cooldownSlider;
@@ -21,14 +22,18 @@ public class TrainController : MonoBehaviour
     {
         _chargesLeft = _maxCharges;
         _currentTrack = 3;
+        _healthLeft = _maxHealth;
         _chargeCooldownTimer.OnTimerEnd += AddCharge;
     }
 
     private void Update()
     {
-        MovementVertical();
-        MovementHorizontal();
-        RechargeHorizontal();
+        if (_isAlive)
+        {
+            MovementVertical();
+            MovementHorizontal();
+            RechargeHorizontal();
+        }
     }
 
     private void MovementVertical()
@@ -45,21 +50,20 @@ public class TrainController : MonoBehaviour
 
         if (move != 0)
         {
-            if (axisInUse == false)
+            if (_axisInUse == false)
             {
                 if (_chargesLeft > 0)
                 {
                     ChangeTrack(move);
                 }
-                axisInUse = true;
+                _axisInUse = true;
             }
         }
 
         if (move == 0)
         {
-            axisInUse = false;
+            _axisInUse = false;
         }
-
     }
 
     private void ChangeTrack(float move)
@@ -109,5 +113,29 @@ public class TrainController : MonoBehaviour
     private void UpdateChargesUI()
     {
         _chargesLeftUI.text = _chargesLeft.ToString();
+    }
+
+    private void TakeDamage()
+    {
+        _healthLeft--;
+        Debug.Log("Remaining health: " + _healthLeft);
+        if (_healthLeft == 0)
+        {
+            GameOver();
+        }
+    }
+
+    private void GameOver()
+    {
+        Debug.Log("player dead");
+        _isAlive = false;
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.tag == "Enemy" || other.tag == "EnemyBullet")
+        {
+            TakeDamage();
+        }
     }
 }

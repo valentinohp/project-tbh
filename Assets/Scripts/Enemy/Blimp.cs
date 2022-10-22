@@ -5,12 +5,13 @@ namespace Wanpis.TBH.Enemy
 {
     public class Blimp : MonoBehaviour
     {
+        [SerializeField] private int _health = 3;
         [SerializeField] private Vector3[] _corners;
         [SerializeField] private float _moveSpeed;
         private Vector3 _enterPoint;
         private Vector3 _target;
         private Vector3 _exitPoint;
-        private int _randomSpawn;
+        [SerializeField] private int _randomSpawn = -1;
         private int _currentState = 1;
         private Queue _positionQueue = new Queue();
         private bool _targetSet = false;
@@ -19,8 +20,13 @@ namespace Wanpis.TBH.Enemy
 
         private void Start()
         {
-            _randomSpawn = Random.Range(0, _corners.Length);
+            if (_randomSpawn == -1)
+            {
+                _randomSpawn = Random.Range(0, _corners.Length);
+            }
+
             _enterPoint = _corners[_randomSpawn];
+
             if (_enterPoint.y < 0)
             {
                 transform.position = _exitPoint = _enterPoint + new Vector3(0, -1.5f, 0);
@@ -32,7 +38,7 @@ namespace Wanpis.TBH.Enemy
 
             for (int i = 0; i < _corners.Length; i++)
             {
-                if (_randomSpawn+1 == _corners.Length)
+                if (_randomSpawn + 1 == _corners.Length)
                 {
                     _positionQueue.Enqueue(_corners[0]);
                     _randomSpawn = 0;
@@ -41,7 +47,6 @@ namespace Wanpis.TBH.Enemy
                 {
                     _positionQueue.Enqueue(_corners[++_randomSpawn]);
                 }
-                Debug.Log(_corners[_randomSpawn]);
             }
         }
 
@@ -87,7 +92,7 @@ namespace Wanpis.TBH.Enemy
 
         private void Cycle()
         {
-            _target = (Vector3) _positionQueue.Dequeue();
+            _target = (Vector3)_positionQueue.Dequeue();
             _targetSet = true;
         }
 
@@ -102,6 +107,19 @@ namespace Wanpis.TBH.Enemy
         {
             yield return new WaitForSeconds(2);
             _canMove = true;
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (other.tag == "Bullet" || other.tag == "Player")
+            {
+                _health--;
+                other.gameObject.SetActive(false);
+                if (_health <= 0)
+                {
+                    gameObject.SetActive(false);
+                }
+            }
         }
     }
 }
