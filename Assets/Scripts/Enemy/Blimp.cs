@@ -17,6 +17,10 @@ namespace Wanpis.TBH.Enemy
         private bool _targetSet = false;
         private bool _canMove = true;
         private bool _exit = false;
+        [SerializeField] private Transform _bulletSpawnPoint;
+        private Transform _targetShoot;
+        private float _rotateZ;
+        [SerializeField] private float _shootInterval = 3f;
 
         private void Start()
         {
@@ -48,6 +52,9 @@ namespace Wanpis.TBH.Enemy
                     _positionQueue.Enqueue(_corners[++_randomSpawn]);
                 }
             }
+
+            _targetShoot = TrainController.Position;
+            StartCoroutine(Shoot());
         }
 
         private void Update()
@@ -82,6 +89,15 @@ namespace Wanpis.TBH.Enemy
                     gameObject.SetActive(false);
                 }
             }
+
+            if (_targetShoot == null)
+            {
+                _targetShoot = TrainController.Position;
+            }
+
+            Vector3 difference = _targetShoot.position - transform.position;
+            difference.Normalize();
+            _rotateZ = Mathf.Atan2(difference.y, difference.x) * Mathf.Rad2Deg;
         }
 
         private void Spawn()
@@ -114,12 +130,28 @@ namespace Wanpis.TBH.Enemy
             if (other.tag == "Bullet" || other.tag == "Player")
             {
                 _health--;
-                other.gameObject.SetActive(false);
+                if (other.tag == "Bullet")
+                {
+                    other.gameObject.SetActive(false);
+                }
+
                 if (_health <= 0)
                 {
                     gameObject.SetActive(false);
                 }
             }
+        }
+
+        private IEnumerator Shoot()
+        {
+            if (_targetShoot == null)
+            {
+                _targetShoot = TrainController.Position;
+            }
+
+            EnemyBulletPool.Instance.Shoot(_bulletSpawnPoint.position, Quaternion.Euler(0f, 0f, _rotateZ));
+            yield return new WaitForSeconds(_shootInterval);
+            StartCoroutine(Shoot());
         }
     }
 }

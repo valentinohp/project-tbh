@@ -17,9 +17,11 @@ public class TrainController : MonoBehaviour
     [SerializeField] private Timer _chargeCooldownTimer;
     [SerializeField] private TMP_Text _chargesLeftUI;
     [SerializeField] private Slider _cooldownSlider;
+    public static Transform Position;
 
     private void Start()
     {
+        Position = transform;
         _chargesLeft = _maxCharges;
         _currentTrack = 3;
         _healthLeft = _maxHealth;
@@ -129,6 +131,7 @@ public class TrainController : MonoBehaviour
     {
         Debug.Log("player dead");
         _isAlive = false;
+        gameObject.SetActive(false);
     }
 
     private void OnTriggerEnter2D(Collider2D other)

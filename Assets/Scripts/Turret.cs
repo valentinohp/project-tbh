@@ -6,7 +6,6 @@ public class Turret : MonoBehaviour
 {
     [SerializeField] private EnemySpawner _enemySpawner;
     [SerializeField] private Transform _bulletSpawnPoint;
-    [SerializeField] private GameObject _bulletPrefab;
     [SerializeField] private Transform _defaultBulletPoint;
     private float _distanceToTarget = 1000f;
     private float _angleToTarget;
@@ -53,7 +52,7 @@ public class Turret : MonoBehaviour
 
     private IEnumerator Shoot()
     {
-        Instantiate(_bulletPrefab, _bulletSpawnPoint.position, Quaternion.Euler(0f, 0f, _rotateZ + 90f));
+        BulletPool.Instance.Shoot(_bulletSpawnPoint.position, Quaternion.Euler(0f, 0f, _rotateZ + 90f));
         yield return new WaitForSeconds(1);
         StartCoroutine(Shoot());
     }
