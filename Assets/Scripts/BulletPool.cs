@@ -9,16 +9,16 @@ public class BulletPool : MonoBehaviour
     public List<Bullet> Bullets = new List<Bullet>();
     private int _bulletPointer = 0;
 
-    private void Start()
+    private void Awake()
     {
-        if (Instance == null)
+        if (Instance != null)
         {
-            Instance = this;
-            DontDestroyOnLoad(this);
+            Destroy(gameObject);
         }
         else
         {
-            Destroy(this);
+            Instance = this;
+            DontDestroyOnLoad(this);
         }
 
         for (int i = 0; i < _poolSize; i++)
@@ -42,5 +42,13 @@ public class BulletPool : MonoBehaviour
         bullet.transform.rotation = rotation;
         bullet.gameObject.SetActive(true);
         _bulletPointer++;
+    }
+
+    public void Clear()
+    {
+        for (int i = 0; i < Bullets.Count; i++)
+        {
+            Bullets[i].gameObject.SetActive(false);
+        }
     }
 }

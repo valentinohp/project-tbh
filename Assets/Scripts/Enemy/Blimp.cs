@@ -11,9 +11,9 @@ namespace Wanpis.TBH.Enemy
         private Vector3 _enterPoint;
         private Vector3 _target;
         private Vector3 _exitPoint;
-        [SerializeField] private int _randomSpawn = -1;
+        public int RandomSpawn = -1;
         private int _currentState = 1;
-        private Queue _positionQueue = new Queue();
+        private Queue _positionQueue;
         private bool _targetSet = false;
         private bool _canMove = true;
         private bool _exit = false;
@@ -21,15 +21,21 @@ namespace Wanpis.TBH.Enemy
         private Transform _targetShoot;
         private float _rotateZ;
         [SerializeField] private float _shootInterval = 3f;
+        private int _healthLeft;
+        [SerializeField] private float _score = 10000f;
+        [SerializeField] private ScoreManager _scoreManager;
 
-        private void Start()
+        public void Init()
         {
-            if (_randomSpawn == -1)
+            _healthLeft = _health;
+            _positionQueue = new Queue();
+
+            if (RandomSpawn == -1)
             {
-                _randomSpawn = Random.Range(0, _corners.Length);
+                RandomSpawn = Random.Range(0, _corners.Length);
             }
 
-            _enterPoint = _corners[_randomSpawn];
+            _enterPoint = _corners[RandomSpawn];
 
             if (_enterPoint.y < 0)
             {
@@ -42,19 +48,23 @@ namespace Wanpis.TBH.Enemy
 
             for (int i = 0; i < _corners.Length; i++)
             {
-                if (_randomSpawn + 1 == _corners.Length)
+                if (RandomSpawn + 1 == _corners.Length)
                 {
                     _positionQueue.Enqueue(_corners[0]);
-                    _randomSpawn = 0;
+                    RandomSpawn = 0;
                 }
                 else
                 {
-                    _positionQueue.Enqueue(_corners[++_randomSpawn]);
+                    _positionQueue.Enqueue(_corners[++RandomSpawn]);
                 }
             }
 
             _targetShoot = TrainController.Position;
             StartCoroutine(Shoot());
+            _currentState = 1;
+            _targetSet = false;
+            _canMove = true;
+            _exit = false;
         }
 
         private void Update()
@@ -125,23 +135,6 @@ namespace Wanpis.TBH.Enemy
             _canMove = true;
         }
 
-        private void OnTriggerEnter2D(Collider2D other)
-        {
-            if (other.tag == "Bullet" || other.tag == "Player")
-            {
-                _health--;
-                if (other.tag == "Bullet")
-                {
-                    other.gameObject.SetActive(false);
-                }
-
-                if (_health <= 0)
-                {
-                    gameObject.SetActive(false);
-                }
-            }
-        }
-
         private IEnumerator Shoot()
         {
             if (_targetShoot == null)
@@ -149,9 +142,32 @@ namespace Wanpis.TBH.Enemy
                 _targetShoot = TrainController.Position;
             }
 
+            SoundManager.Instance.PlaySFX("EnemyAttackDrone");
             EnemyBulletPool.Instance.Shoot(_bulletSpawnPoint.position, Quaternion.Euler(0f, 0f, _rotateZ));
             yield return new WaitForSeconds(_shootInterval);
             StartCoroutine(Shoot());
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (other.tag == "Bullet")
+            {
+                SoundManager.Instance.PlaySFX("PlayerAttackHits");
+                _healthLeft--;
+                other.gameObject.SetActive(false);
+            }
+
+            if (other.tag == "Player")
+            {
+                _healthLeft = 0;
+            }
+
+            if (_healthLeft <= 0)
+            {
+                SoundManager.Instance.PlaySFX("EnemyDefeated");
+                gameObject.SetActive(false);
+                _scoreManager.AddScore(_score);
+            }
         }
     }
 }

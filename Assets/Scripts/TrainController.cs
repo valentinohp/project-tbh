@@ -13,11 +13,16 @@ public class TrainController : MonoBehaviour
     private int _chargesLeft;
     private int _currentTrack;
     private bool _axisInUse = false;
-    private bool _isAlive = true;
+    public static bool IsAlive = false;
     [SerializeField] private Timer _chargeCooldownTimer;
     [SerializeField] private TMP_Text _chargesLeftUI;
     [SerializeField] private Slider _cooldownSlider;
     public static Transform Position;
+    [SerializeField] private TMP_Text _healthUI;
+    [SerializeField] private MenuNagivation _menuNavigation;
+    [SerializeField] private Image _lever;
+    [SerializeField] private Sprite _leverUp;
+    [SerializeField] private Sprite _leverDown;
 
     private void Start()
     {
@@ -26,11 +31,12 @@ public class TrainController : MonoBehaviour
         _currentTrack = 3;
         _healthLeft = _maxHealth;
         _chargeCooldownTimer.OnTimerEnd += AddCharge;
+        _healthUI.text = "Health: " + _healthLeft;
     }
 
     private void Update()
     {
-        if (_isAlive)
+        if (IsAlive)
         {
             MovementVertical();
             MovementHorizontal();
@@ -75,12 +81,14 @@ public class TrainController : MonoBehaviour
             _currentTrack++;
             transform.Translate(new Vector3(0.75f, 0, 0));
             _chargesLeft--;
+            SoundManager.Instance.PlaySFX("PlayerChangeRail");
         }
         else if (move < 0 && _currentTrack > 1)
         {
             _currentTrack--;
             transform.Translate(new Vector3(-0.75f, 0, 0));
             _chargesLeft--;
+            SoundManager.Instance.PlaySFX("PlayerChangeRail");
         }
 
         UpdateChargesUI();
@@ -102,7 +110,7 @@ public class TrainController : MonoBehaviour
 
         if (_chargeCooldownTimer.GetIsRunning())
         {
-            _cooldownSlider.value = _chargeCooldownTimer.GetRemainingTime() / _chargeCooldownTimer.GetDuration();
+            _cooldownSlider.value = (_chargeCooldownTimer.GetDuration() - _chargeCooldownTimer.GetRemainingTime()) / _chargeCooldownTimer.GetDuration();
         }
     }
 
@@ -115,13 +123,21 @@ public class TrainController : MonoBehaviour
     private void UpdateChargesUI()
     {
         _chargesLeftUI.text = _chargesLeft.ToString();
+        if (_chargesLeft == 0)
+        {
+            _lever.sprite = _leverDown;
+        }
+        else
+        {
+            _lever.sprite = _leverUp;
+        }
     }
 
     private void TakeDamage()
     {
         _healthLeft--;
-        Debug.Log("Remaining health: " + _healthLeft);
-        if (_healthLeft == 0)
+        _healthUI.text = "Health " + _healthLeft;
+        if (_healthLeft <= 0)
         {
             GameOver();
         }
@@ -129,16 +145,28 @@ public class TrainController : MonoBehaviour
 
     private void GameOver()
     {
-        Debug.Log("player dead");
-        _isAlive = false;
+        IsAlive = false;
+        _healthUI.text = "Dead";
         gameObject.SetActive(false);
+        _menuNavigation.GameOver();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.tag == "Enemy" || other.tag == "EnemyBullet")
         {
+            if (other.tag == "Enemy")
+            {
+                SoundManager.Instance.PlaySFX("TrainCrash");
+            }
+
+            if (other.tag == "EnemyBullet")
+            {
+                SoundManager.Instance.PlaySFX("EnemyAttackHits");
+            }
+
             TakeDamage();
+            other.gameObject.SetActive(false);
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using Wanpis.TBH.Enemy;
+using UnityEngine.UI;
 
 public class Turret : MonoBehaviour
 {
@@ -12,7 +13,7 @@ public class Turret : MonoBehaviour
     private Transform _target;
     private float _rotateZ;
 
-    private void Start()
+    public void StartShooting()
     {
         StartCoroutine(Shoot());
     }
@@ -22,12 +23,6 @@ public class Turret : MonoBehaviour
         for (int i = 0; i < _enemySpawner.Enemies.Count; i++)
         {
             Transform target = _enemySpawner.Enemies[i].transform;
-
-            if (!target.gameObject.activeInHierarchy)
-            {
-                _enemySpawner.Enemies.RemoveAt(i);
-                continue;
-            }
 
             float distance = Vector3.Distance(transform.position, target.position);
 
@@ -52,6 +47,7 @@ public class Turret : MonoBehaviour
 
     private IEnumerator Shoot()
     {
+        SoundManager.Instance.PlaySFX("PlayerAttack");
         BulletPool.Instance.Shoot(_bulletSpawnPoint.position, Quaternion.Euler(0f, 0f, _rotateZ + 90f));
         yield return new WaitForSeconds(1);
         StartCoroutine(Shoot());
