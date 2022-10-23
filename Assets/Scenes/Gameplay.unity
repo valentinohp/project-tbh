@@ -4094,7 +4094,7 @@ MonoBehaviour:
   _gameOver: {fileID: 1709776044}
   _backButton: {fileID: 317456157}
   _score: {fileID: 1690666329}
-  _title: {fileID: 0}
+  _title: {fileID: 1368915926}
 --- !u!1 &1331232773 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4061607005615354814, guid: 8032521949de227469c2708cb61e1dab, type: 3}
